@@ -1,0 +1,1 @@
+./dist/macos/arm64/gif-maker -i test_image -o test_output/prototype1.gif -d 1000 -p "*.png"
