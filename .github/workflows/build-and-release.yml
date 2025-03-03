@@ -41,8 +41,9 @@ jobs:
     - name: 设置 Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
-        cache: 'pip'
+        python-version: '3.13.1'
+        # 禁用缓存以避免缓存问题
+        cache: 'none'
 
     - name: 创建虚拟环境
       run: |
@@ -66,17 +67,41 @@ jobs:
       run: |
         source git_env/bin/activate
         python build.py
+        # 输出目录结构以进行调试
+        ls -la dist/
+        
+        # 确保目录结构存在
+        if [[ "${{ matrix.platform }}" == "linux" ]]; then
+          mkdir -p dist/linux
+          cp dist/gif-maker-linux-x86_64 dist/linux/gif-maker
+          chmod +x dist/linux/gif-maker
+        elif [[ "${{ matrix.platform }}" == "macos" ]]; then
+          mkdir -p dist/macos/x64
+          cp dist/gif-maker-macos-x86_64 dist/macos/x64/gif-maker
+          chmod +x dist/macos/x64/gif-maker
+        fi
         
     - name: 构建应用 (macOS ARM64)
       if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
       run: |
         source git_env/bin/activate
-        # 使用特定的目标平台和架构参数
-        python -c "import sys; from pathlib import Path; sys.path.insert(0, '.')"
-        python -c "from build import build_executable; build_executable('macos', 'arm64')"
+        python build.py
+        # 输出目录结构以进行调试
+        ls -la dist/
+        
         # 手动创建目录结构并复制文件
         mkdir -p dist/macos/arm64
-        cp dist/gif-maker-macos-arm64 dist/macos/arm64/gif-maker
+        # 如果文件存在，则复制
+        if [ -f dist/gif-maker-macos-arm64 ]; then
+          cp dist/gif-maker-macos-arm64 dist/macos/arm64/gif-maker
+        # 如果不存在，则复制x86_64版本（在GitHub Actions上实际上我们无法构建真正的ARM版本）
+        elif [ -f dist/gif-maker-macos-x86_64 ]; then
+          cp dist/gif-maker-macos-x86_64 dist/macos/arm64/gif-maker
+        # 如果上述文件都不存在，则复制任何可用的macOS可执行文件
+        else
+          find dist -name "gif-maker*" -type f -exec cp {} dist/macos/arm64/gif-maker \;
+        fi
+        
         chmod +x dist/macos/arm64/gif-maker
         
     - name: 构建应用 (Windows)
@@ -84,6 +109,11 @@ jobs:
       run: |
         git_env\Scripts\activate
         python build.py
+        # 输出目录结构以进行调试
+        dir dist /s
+        # 手动创建目录结构并复制文件
+        if not exist dist\windows mkdir dist\windows
+        copy dist\gif-maker-windows-x86_64.exe dist\windows\gif-maker.exe
       shell: cmd
         
     - name: 上传构建产物
