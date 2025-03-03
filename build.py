@@ -24,57 +24,57 @@ DIST_DIR = Path(ROOT_DIR, "dist")
 BUILD_DIR = Path(ROOT_DIR, "build")
 
 def check_target_file():
-    """检查目标文件是否存在"""
-    print("检查目标文件...")
+    """Check if target file exists"""
+    print("Checking target file...")
     if TARGET_FILE.exists():
-        print(f"使用现有的 {TARGET_FILE} 文件")
+        print(f"Using existing {TARGET_FILE} file")
     else:
-        print(f"错误: 目标文件 {TARGET_FILE} 不存在")
+        print(f"Error: Target file {TARGET_FILE} does not exist")
         sys.exit(1)
 
 def install_dependencies():
-    """安装依赖包"""
-    print("安装依赖包...")
+    """Install dependencies"""
+    print("Installing dependencies...")
     
     try:
-        # 使用requirements.txt安装依赖
+        # Install dependencies using requirements.txt
         requirements_file = Path(ROOT_DIR, "requirements.txt")
         if requirements_file.exists():
             subprocess.run([sys.executable, "-m", "pip", "install", "-r", str(requirements_file)], check=True)
-            print("依赖包安装成功")
+            print("Dependencies installed successfully")
         else:
-            print(f"警告: requirements.txt文件不存在，将安装默认依赖")
+            print(f"Warning: requirements.txt file does not exist, will install default dependencies")
             dependencies = ["pyinstaller", "pillow"]
             subprocess.run([sys.executable, "-m", "pip", "install", "--upgrade"] + dependencies, check=True)
-            print("默认依赖包安装成功")
+            print("Default dependencies installed successfully")
     except subprocess.CalledProcessError as e:
-        print(f"安装依赖包时出错: {e}")
+        print(f"Error installing dependencies: {e}")
         sys.exit(1)
 
 def build_executable(target_platform=None, target_arch=None):
-    """构建可执行文件
+    """Build executable file
     
-    参数:
-        target_platform: 目标平台，可以是 'windows', 'macos', 'linux' 或 None (当前平台)
-        target_arch: 目标架构，可以是 'x86_64', 'arm64' 或 None (当前架构)
+    Args:
+        target_platform: Target platform, can be 'windows', 'macos', 'linux' or None (current platform)
+        target_arch: Target architecture, can be 'x86_64', 'arm64' or None (current architecture)
     """
     current_platform = platform.system().lower()
     current_arch = platform.machine().lower()
     
-    # 如果没有指定目标平台，则使用当前平台
+    # If target platform is not specified, use current platform
     if target_platform is None:
         target_platform = current_platform
     
-    # 如果没有指定目标架构，则使用当前架构
+    # If target architecture is not specified, use current architecture
     if target_arch is None:
         target_arch = current_arch
     
-    print(f"开始为 {target_platform} ({target_arch}) 构建可执行文件...")
+    print(f"Building executable for {target_platform} ({target_arch})...")
     
-    # 确保输出目录存在
+    # Ensure output directory exists
     os.makedirs(DIST_DIR, exist_ok=True)
     
-    # 构建命令
+    # Build command
     cmd = [
         sys.executable, 
         "-m", 
@@ -85,27 +85,27 @@ def build_executable(target_platform=None, target_arch=None):
         str(TARGET_FILE)
     ]
     
-    # 添加平台特定选项
+    # Add platform-specific options
     if target_platform == "windows" and current_platform != "windows":
-        print("警告: 在非Windows平台上构建Windows可执行文件可能需要Wine")
+        print("Warning: Building Windows executable on non-Windows platform may require Wine")
     
     try:
         subprocess.run(cmd, check=True)
-        print(f"为 {target_platform} ({target_arch}) 构建可执行文件成功")
+        print(f"Successfully built executable for {target_platform} ({target_arch})")
         return True
     except subprocess.CalledProcessError as e:
-        print(f"构建可执行文件时出错: {e}")
+        print(f"Error building executable: {e}")
         if target_platform != current_platform or target_arch != current_arch:
-            print(f"跳过 {target_platform} ({target_arch}) 平台构建")
+            print(f"Skipping {target_platform} ({target_arch}) platform build")
             return False
         else:
             sys.exit(1)
 
 def create_distribution_package():
-    """创建分发包"""
-    print("创建分发包...")
+    """Create distribution package"""
+    print("Creating distribution package...")
     
-    # 创建分发目录结构
+    # Create distribution directory structure
     dist_macos_x64 = Path(DIST_DIR, "macos", "x64")
     dist_macos_arm64 = Path(DIST_DIR, "macos", "arm64")
     dist_windows = Path(DIST_DIR, "windows")
@@ -116,11 +116,11 @@ def create_distribution_package():
     os.makedirs(dist_windows, exist_ok=True)
     os.makedirs(dist_linux, exist_ok=True)
     
-    # 获取当前系统信息
+    # Get current system information
     current_system = platform.system().lower()
     current_machine = platform.machine().lower()
     
-    # 定义要构建的平台和架构
+    # Define platforms and architectures to build
     platforms = [
         ("windows", "x86_64"),
         ("macos", "x86_64"),
@@ -128,19 +128,19 @@ def create_distribution_package():
         ("linux", "x86_64")
     ]
     
-    # 为每个平台构建可执行文件
+    # Build executable for each platform
     for target_platform, target_arch in platforms:
-        # 如果不是当前平台和架构，跳过
+        # Skip if not current platform and architecture
         if (target_platform != current_system or target_arch != current_machine) and not (current_system == "darwin" and target_platform == "macos"):
-            print(f"注意: 跳过 {target_platform} ({target_arch}) 平台构建，因为当前系统不匹配")
+            print(f"Note: Skipping {target_platform} ({target_arch}) platform build because current system does not match")
             continue
             
-        # 构建可执行文件
+        # Build executable
         success = build_executable(target_platform, target_arch)
         if not success:
             continue
         
-        # 确定源文件名和目标目录
+        # Determine source file name and target directory
         source_name = f"gif-maker-{target_platform}-{target_arch}"
         if target_platform == "windows":
             source_name += ".exe"
@@ -156,48 +156,49 @@ def create_distribution_package():
             target_dir = dist_linux
             target_name = "gif-maker"
         
-        # 复制文件到目标目录
+        # Copy file to target directory
         source_path = Path(ROOT_DIR, "dist", source_name)
         target_path = Path(target_dir, target_name)
         
         if source_path.exists():
             shutil.copy2(source_path, target_path)
-            print(f"已复制 {target_platform} {target_arch} 可执行文件到 {target_dir}")
+            print(f"Copied {target_platform} {target_arch} executable to {target_dir}")
             
-            # 为Linux和macOS设置可执行权限
+            # Set executable permissions for Linux and macOS
             if target_platform in ["linux", "macos"] and current_system in ["linux", "darwin"]:
                 os.chmod(target_path, 0o755)
-                print(f"已设置 {target_path} 的可执行权限")
+                print(f"Set executable permissions for {target_path}")
     
-    print("分发包创建完成")
+    print("Distribution package creation complete")
 
 def create_readme():
-    """创建README文件"""
-    # 我们不再创建README文件，因为它已经存在并被用户修改过
+    """Create README file"""
+    # We no longer create README file because it already exists and has been modified by the user
     readme_path = Path(ROOT_DIR, "README.md")
     if readme_path.exists():
-        print(f"使用现有README文件: {readme_path}")
+        print(f"Using existing README file: {readme_path}")
     else:
-        print(f"警告: README文件不存在: {readme_path}")
+        print(f"Warning: README file does not exist: {readme_path}")
 
 def clean_up():
-    """清理临时文件"""
-    print("清理临时文件...")
+    """Clean up temporary files"""
+    print("Cleaning up temporary files...")
     
-    # 清理PyInstaller生成的临时文件
+    # Clean up PyInstaller generated temporary files
     for spec_file in ROOT_DIR.glob("*.spec"):
         os.remove(spec_file)
-        print(f"已删除规格文件: {spec_file}")
+        print(f"Deleted spec file: {spec_file}")
     
-    # 清理构建目录
+    # Clean up build directory
     if BUILD_DIR.exists():
         shutil.rmtree(BUILD_DIR)
-        print(f"已删除构建目录: {BUILD_DIR}")
+        print(f"Deleted build directory: {BUILD_DIR}")
     
-    print("临时文件清理完成")
+    print("Temporary files cleanup complete")
 
 def main():
-    print("开始打包GIF Maker...")
+    # 使用ASCII字符，避免Windows编码问题
+    print("Starting to package GIF Maker...")
     
     # 执行打包步骤
     check_target_file()
@@ -207,8 +208,8 @@ def main():
     create_readme()
     clean_up()
     
-    print("打包完成！分发包位于dist目录中。")
-    print("支持的平台：")
+    print("Packaging complete! Distribution packages are in the dist directory.")
+    print("Supported platforms:")
     print("- macOS Intel (x64): dist/macos/x64")
     print("- macOS ARM (arm64): dist/macos/arm64")
     print("- Windows: dist/windows")

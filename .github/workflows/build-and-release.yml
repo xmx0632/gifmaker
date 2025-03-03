@@ -1,13 +1,13 @@
-name: 构建并发布
+name: Build and Release
 
 on:
   push:
     tags:
-      - 'v*' # 当推送带有v开头的标签时触发，例如v1.0.0
+      - 'v*' # Triggered when pushing a tag starting with v, e.g., v1.0.0
 
 jobs:
   build:
-    name: 在 ${{ matrix.os }} (${{ matrix.arch }}) 上构建
+    name: Build on ${{ matrix.os }} (${{ matrix.arch }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -35,115 +35,116 @@ jobs:
             asset_path: dist/macos/arm64/gif-maker
 
     steps:
-    - name: 检出代码
+    - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: 设置 Python
+    - name: Setup Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.13.1'
-        # 不使用缓存以避免缓存问题
+        # Don't use cache to avoid cache issues
 
-    - name: 创建虚拟环境
+    - name: Create virtual environment
       run: |
         python -m venv git_env
         
-    - name: 安装依赖 (Linux/macOS)
+    - name: Install dependencies (Linux/macOS)
       if: matrix.os != 'windows-latest'
       run: |
         source git_env/bin/activate
         pip install -r requirements.txt
         
-    - name: 安装依赖 (Windows)
+    - name: Install dependencies (Windows)
       if: matrix.os == 'windows-latest'
       run: |
         git_env\Scripts\activate
         pip install -r requirements.txt
       shell: cmd
 
-    - name: 构建应用 (Linux/macOS x86_64)
+    - name: Build application (Linux/macOS x86_64)
       if: matrix.os != 'windows-latest' && matrix.arch == 'x86_64'
       run: |
         source git_env/bin/activate
         python build.py
-        # 输出目录结构以进行调试
+        # Output directory structure for debugging
         ls -la dist/
         find dist -type f -name "gif-maker*"
         
-        # 确保目录结构存在
+        # Ensure directory structure exists
         if [[ "${{ matrix.platform }}" == "linux" ]]; then
           mkdir -p dist/linux
-          # 尝试不同的文件名模式
+          # Try different file name patterns
           if [ -f dist/gif-maker-linux-x86_64 ]; then
             cp dist/gif-maker-linux-x86_64 dist/linux/gif-maker
           elif [ -f dist/gif-maker-linux ]; then
             cp dist/gif-maker-linux dist/linux/gif-maker
           else
-            # 如果上述文件都不存在，复制任何找到的Linux可执行文件
+            # If none of the above files exist, copy any Linux executable found
             find dist -type f -name "gif-maker-linux*" -exec cp {} dist/linux/gif-maker \; -quit
           fi
           chmod +x dist/linux/gif-maker
         elif [[ "${{ matrix.platform }}" == "macos" ]]; then
           mkdir -p dist/macos/x64
-          # 尝试不同的文件名模式
+          # Try different file name patterns
           if [ -f dist/gif-maker-macos-x86_64 ]; then
             cp dist/gif-maker-macos-x86_64 dist/macos/x64/gif-maker
           elif [ -f dist/gif-maker-macos ]; then
             cp dist/gif-maker-macos dist/macos/x64/gif-maker
           else
-            # 如果上述文件都不存在，复制任何找到的macOS可执行文件
+            # If none of the above files exist, copy any macOS executable found
             find dist -type f -name "gif-maker-macos*" -exec cp {} dist/macos/x64/gif-maker \; -quit
           fi
           chmod +x dist/macos/x64/gif-maker
         fi
         
-    - name: 构建应用 (macOS ARM64)
+    - name: Build application (macOS ARM64)
       if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
       run: |
         source git_env/bin/activate
         python build.py
-        # 输出目录结构以进行调试
+        # Output directory structure for debugging
         ls -la dist/
         find dist -type f -name "gif-maker*"
         
-        # 手动创建目录结构并复制文件
+        # Manually create directory structure and copy files
         mkdir -p dist/macos/arm64
-        # 尝试不同的文件名模式
+        # Try different file name patterns
         if [ -f dist/gif-maker-macos-arm64 ]; then
           cp dist/gif-maker-macos-arm64 dist/macos/arm64/gif-maker
         elif [ -f dist/gif-maker-macos ]; then
           cp dist/gif-maker-macos dist/macos/arm64/gif-maker
-        # 如果不存在，则复制x86_64版本（在GitHub Actions上实际上我们无法构建真正的ARM版本）
+        # If it doesn't exist, copy the x86_64 version (we can't actually build a real ARM version on GitHub Actions)
         elif [ -f dist/gif-maker-macos-x86_64 ]; then
           cp dist/gif-maker-macos-x86_64 dist/macos/arm64/gif-maker
-        # 如果上述文件都不存在，则复制任何可用的macOS可执行文件
+        # If none of the above files exist, copy any available macOS executable
         else
           find dist -type f -name "gif-maker-macos*" -exec cp {} dist/macos/arm64/gif-maker \; -quit
         fi
         
         chmod +x dist/macos/arm64/gif-maker
         
-    - name: 构建应用 (Windows)
+    - name: Build Application (Windows)
       if: matrix.os == 'windows-latest'
       run: |
+        chcp 65001
         call git_env\Scripts\activate.bat
         python build.py
-        # 输出目录结构以进行调试
+        REM Output directory structure for debugging
         dir dist /s
-        # 手动创建目录结构并复制文件
+        REM Manually create directory structure and copy files
         if not exist dist\windows mkdir dist\windows
-        # 尝试不同的文件名模式
+        REM Try different file name patterns
         if exist dist\gif-maker-windows-x86_64.exe (
           copy dist\gif-maker-windows-x86_64.exe dist\windows\gif-maker.exe
         ) else if exist dist\gif-maker-windows.exe (
           copy dist\gif-maker-windows.exe dist\windows\gif-maker.exe
         ) else (
-          # 如果以上文件都不存在，复制任何找到的.exe文件
+          REM If above files don't exist, copy any found .exe file
           for /f "tokens=*" %%a in ('dir /b /s dist\*.exe') do copy "%%a" dist\windows\gif-maker.exe
         )
       shell: cmd
         
-    - name: 上传构建产物
+    - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.asset_name }}
@@ -151,48 +152,48 @@ jobs:
         if-no-files-found: error
 
   release:
-    name: 创建发布
+    name: Create Release
     needs: build
     if: always()
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: 检出代码
+      - name: Checkout code
         uses: actions/checkout@v4
         
-      - name: 获取标签版本
+      - name: Get tag version
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
         
-      - name: 下载所有构建产物
+      - name: Download all build artifacts
         uses: actions/download-artifact@v4
         with:
           path: ./artifacts
           
-      - name: 查看下载的构建产物
+      - name: View downloaded build artifacts
         run: |
           ls -la ./artifacts
           find ./artifacts -type f
           
-      - name: 准备发布文件
+      - name: Prepare release files
         run: |
           mkdir -p ./release-files
-          # 复制可能存在的构建产物
+          # Copy build artifacts that may exist
           [ -f ./artifacts/gif-maker-linux/gif-maker ] && cp ./artifacts/gif-maker-linux/gif-maker ./release-files/gif-maker-linux
           [ -f ./artifacts/gif-maker-windows.exe/gif-maker.exe ] && cp ./artifacts/gif-maker-windows.exe/gif-maker.exe ./release-files/gif-maker-windows.exe
           [ -f ./artifacts/gif-maker-macos-x86_64/gif-maker ] && cp ./artifacts/gif-maker-macos-x86_64/gif-maker ./release-files/gif-maker-macos-x86_64
           [ -f ./artifacts/gif-maker-macos-arm64/gif-maker ] && cp ./artifacts/gif-maker-macos-arm64/gif-maker ./release-files/gif-maker-macos-arm64
           
-          # 查看准备好的发布文件
+          # View prepared release files
           ls -la ./release-files
           
-      - name: 创建发布
+      - name: Create release
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref }}
-          name: 发布 ${{ steps.get_version.outputs.VERSION }}
+          name: Release ${{ steps.get_version.outputs.VERSION }}
           draft: false
           prerelease: false
           files: ./release-files/*
