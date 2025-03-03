@@ -7,7 +7,7 @@
 - 将多张图片合并成一张GIF动态图片
 - 支持设置帧延迟时间
 - 支持多种图片格式
-- 跨平台支持：Windows、macOS Intel和macOS ARM架构
+- 跨平台支持：Windows、macOS Intel、macOS ARM架构和Linux
 
 ## 使用方法
 
@@ -51,6 +51,15 @@ chmod +x gif-maker
 ### macOS ARM (Apple Silicon)
 
 下载`macos/arm64`目录中的`gif-maker`文件，通过终端使用：
+
+```bash
+chmod +x gif-maker
+./gif-maker -i 图片目录 -o 输出文件名.gif
+```
+
+### Linux
+
+下载`linux`目录中的`gif-maker`文件，通过终端使用：
 
 ```bash
 chmod +x gif-maker
