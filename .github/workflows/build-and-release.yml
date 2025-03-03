@@ -42,9 +42,27 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.13.1'
-        # Don't use cache to avoid cache issues
+        cache: 'pip'
+
+    - name: Hash requirements file
+      id: hash-requirements
+      run: echo "hash=${{ hashFiles('requirements.txt') }}" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Cache virtual environment
+      uses: actions/cache@v4
+      id: venv-cache
+      with:
+        path: |
+          git_env
+          ~/.cache/pip
+          ~\AppData\Local\pip\Cache
+        key: ${{ runner.os }}-venv-${{ steps.hash-requirements.outputs.hash }}
+        restore-keys: |
+          ${{ runner.os }}-venv-
 
     - name: Create virtual environment
+      if: steps.venv-cache.outputs.cache-hit != 'true'
       run: |
         python -m venv git_env
         
@@ -52,14 +70,20 @@ jobs:
       if: matrix.os != 'windows-latest'
       run: |
         source git_env/bin/activate
-        pip install -r requirements.txt
+        if [ "${{ steps.venv-cache.outputs.cache-hit }}" != 'true' ]; then
+          pip install -r requirements.txt
+        fi
         
     - name: Install dependencies (Windows)
       if: matrix.os == 'windows-latest'
       run: |
-        git_env\Scripts\activate
-        pip install -r requirements.txt
+        call git_env\Scripts\activate.bat
+        if not defined CACHE_HIT (
+          pip install -r requirements.txt
+        )
       shell: cmd
+      env:
+        CACHE_HIT: ${{ steps.venv-cache.outputs.cache-hit }}
 
     - name: Build application (Linux/macOS x86_64)
       if: matrix.os != 'windows-latest' && matrix.arch == 'x86_64'

@@ -119,4 +119,6 @@ source git_env/bin/activate
 - 工作流配置文件位于`.github/workflows/build-and-release.yml`
 - 工作流在推送以`v`开头的标签时触发（例如`v1.0.0`）
 - 工作流会并行构建四种平台版本的可执行文件，包括两种macOS架构（Intel和Apple Silicon）
+- 工作流使用依赖缓存机制，显著减少重复安装时间，提高构建速度
+- 缓存基于`requirements.txt`文件的哈希值，当依赖项变化时才会重新安装
 - 构建完成后，工作流会创建一个新的GitHub Release并上传所有可执行文件
