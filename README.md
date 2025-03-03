@@ -98,6 +98,8 @@ source git_env/bin/activate
 
 ### 发布新版本
 
+#### 方法一：使用脚本发布
+
 1. 确保所有代码变更已提交到仓库
 2. 使用提供的发布脚本创建新版本：
 
@@ -107,17 +109,31 @@ source git_env/bin/activate
 ```
 
 3. 脚本会创建标签并推送到GitHub，触发GitHub Actions工作流
-4. GitHub Actions将自动构建四种平台版本的可执行文件：
-   - Windows
-   - macOS Intel (x86_64)
-   - macOS Apple Silicon (ARM64)
-   - Linux
-5. 构建完成后，可执行文件将自动上传到GitHub Releases页面
+
+#### 方法二：使用GitHub网页手动触发
+
+1. 在GitHub仓库页面上，点击“Actions”标签
+2. 在左侧工作流列表中，选择“Build and Release”
+3. 点击“Run workflow”按钮
+4. 输入版本号（例如：1.0.0），并选择是否为预发布版本
+5. 点击“Run workflow”开始构建
+
+#### 构建结果
+
+GitHub Actions将自动构建四种平台版本的可执行文件：
+- Windows
+- macOS Intel (x86_64)
+- macOS Apple Silicon (ARM64)
+- Linux
+
+构建完成后，可执行文件将自动上传到GitHub Releases页面
 
 ### 工作流说明
 
 - 工作流配置文件位于`.github/workflows/build-and-release.yml`
-- 工作流在推送以`v`开头的标签时触发（例如`v1.0.0`）
+- 工作流可通过两种方式触发：
+  - 推送以`v`开头的标签时自动触发（例如`v1.0.0`）
+  - 在GitHub Actions页面上手动触发，并指定版本号
 - 工作流会并行构建四种平台版本的可执行文件，包括两种macOS架构（Intel和Apple Silicon）
 - 工作流使用依赖缓存机制，显著减少重复安装时间，提高构建速度
 - 缓存基于`requirements.txt`文件的哈希值，当依赖项变化时才会重新安装

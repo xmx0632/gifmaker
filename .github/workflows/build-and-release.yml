@@ -1,9 +1,23 @@
 name: Build and Release
 
 on:
+  # 当推送标签时自动触发
   push:
     tags:
       - 'v*' # Triggered when pushing a tag starting with v, e.g., v1.0.0
+  
+  # 允许从GitHub界面手动触发
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号 (例如: 1.0.0)'
+        required: true
+        default: '0.0.0'
+      prerelease:
+        description: '是否为预发布版本'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -186,9 +200,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         
-      - name: Get tag version
+      - name: Get version
         id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        run: |
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            # 从标签中提取版本号
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            # 使用手动触发时提供的版本号
+            VERSION="v${{ github.event.inputs.version }}"
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Using version: $VERSION"
         
       - name: Download all build artifacts
         uses: actions/download-artifact@v4
@@ -212,14 +235,22 @@ jobs:
           # View prepared release files
           ls -la ./release-files
           
+      - name: Create tag if manually triggered
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag -a ${{ steps.get_version.outputs.VERSION }} -m "Release ${{ steps.get_version.outputs.VERSION }}"
+          git push origin ${{ steps.get_version.outputs.VERSION }}
+      
       - name: Create release
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref }}
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
           name: Release ${{ steps.get_version.outputs.VERSION }}
           draft: false
-          prerelease: false
+          prerelease: ${{ github.event.inputs.prerelease == 'true' }}
           files: ./release-files/*
           body: |
             # GIF Maker ${{ steps.get_version.outputs.VERSION }}
