@@ -91,3 +91,32 @@ source git_env/bin/activate
 构建完成后，可执行文件将位于`dist`目录中。
 
 使用虚拟环境可以确保项目依赖不会与系统Python环境冲突，并且便于管理项目特定的依赖包。
+
+## 使用GitHub Actions自动发布
+
+本项目配置了GitHub Actions工作流，可以自动构建并发布跨平台的可执行文件。
+
+### 发布新版本
+
+1. 确保所有代码变更已提交到仓库
+2. 使用提供的发布脚本创建新版本：
+
+```bash
+# 发布版本1.0.0
+./release.sh 1.0.0
+```
+
+3. 脚本会创建标签并推送到GitHub，触发GitHub Actions工作流
+4. GitHub Actions将自动构建四种平台版本的可执行文件：
+   - Windows
+   - macOS Intel (x86_64)
+   - macOS Apple Silicon (ARM64)
+   - Linux
+5. 构建完成后，可执行文件将自动上传到GitHub Releases页面
+
+### 工作流说明
+
+- 工作流配置文件位于`.github/workflows/build-and-release.yml`
+- 工作流在推送以`v`开头的标签时触发（例如`v1.0.0`）
+- 工作流会并行构建四种平台版本的可执行文件，包括两种macOS架构（Intel和Apple Silicon）
+- 构建完成后，工作流会创建一个新的GitHub Release并上传所有可执行文件

@@ -1,0 +1,148 @@
+name: 构建并发布
+
+on:
+  push:
+    tags:
+      - 'v*' # 当推送带有v开头的标签时触发，例如v1.0.0
+
+jobs:
+  build:
+    name: 在 ${{ matrix.os }} (${{ matrix.arch }}) 上构建
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            arch: x86_64
+            asset_name: gif-maker-linux
+            asset_path: dist/linux/gif-maker
+          - os: windows-latest
+            platform: windows
+            arch: x86_64
+            asset_name: gif-maker-windows.exe
+            asset_path: dist/windows/gif-maker.exe
+          - os: macos-latest
+            platform: macos
+            arch: x86_64
+            asset_name: gif-maker-macos-x86_64
+            asset_path: dist/macos/x64/gif-maker
+          - os: macos-latest
+            platform: macos
+            arch: arm64
+            asset_name: gif-maker-macos-arm64
+            asset_path: dist/macos/arm64/gif-maker
+
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 设置 Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+
+    - name: 创建虚拟环境
+      run: |
+        python -m venv git_env
+        
+    - name: 安装依赖 (Linux/macOS)
+      if: matrix.os != 'windows-latest'
+      run: |
+        source git_env/bin/activate
+        pip install -r requirements.txt
+        
+    - name: 安装依赖 (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        git_env\Scripts\activate
+        pip install -r requirements.txt
+      shell: cmd
+
+    - name: 构建应用 (Linux/macOS x86_64)
+      if: matrix.os != 'windows-latest' && matrix.arch == 'x86_64'
+      run: |
+        source git_env/bin/activate
+        python build.py
+        
+    - name: 构建应用 (macOS ARM64)
+      if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+      run: |
+        source git_env/bin/activate
+        # 使用特定的目标平台和架构参数
+        python -c "import sys; from pathlib import Path; sys.path.insert(0, '.')"
+        python -c "from build import build_executable; build_executable('macos', 'arm64')"
+        # 手动创建目录结构并复制文件
+        mkdir -p dist/macos/arm64
+        cp dist/gif-maker-macos-arm64 dist/macos/arm64/gif-maker
+        chmod +x dist/macos/arm64/gif-maker
+        
+    - name: 构建应用 (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        git_env\Scripts\activate
+        python build.py
+      shell: cmd
+        
+    - name: 上传构建产物
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.asset_name }}
+        path: ${{ matrix.asset_path }}
+        if-no-files-found: error
+
+  release:
+    name: 创建发布
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        
+      - name: 获取标签版本
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        
+      - name: 下载所有构建产物
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+          
+      - name: 创建发布
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref }}
+          name: 发布 ${{ steps.get_version.outputs.VERSION }}
+          draft: false
+          prerelease: false
+          files: |
+            ./artifacts/gif-maker-linux/gif-maker
+            ./artifacts/gif-maker-windows.exe/gif-maker.exe
+            ./artifacts/gif-maker-macos-x86_64/gif-maker
+            ./artifacts/gif-maker-macos-arm64/gif-maker
+          body: |
+            # GIF Maker ${{ steps.get_version.outputs.VERSION }}
+            
+            将多张图片合并成一张GIF动态图片的跨平台工具。
+            
+            ## 下载
+            
+            - [Windows](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.VERSION }}/gif-maker-windows.exe)
+            - [macOS (Intel/x86_64)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.VERSION }}/gif-maker-macos-x86_64)
+            - [macOS (Apple Silicon/ARM64)](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.VERSION }}/gif-maker-macos-arm64)
+            - [Linux](https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.VERSION }}/gif-maker-linux)
+            
+            ## 使用方法
+            
+            ```bash
+            # 基本用法
+            ./gif-maker -i 图片目录 -o 输出文件名.gif -d 帧延迟(毫秒)
+            
+            # 示例
+            ./gif-maker -i ./images -o output.gif -d 200
+            ```
