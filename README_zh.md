@@ -195,3 +195,7 @@ GitHub Actions将自动构建四种平台版本的可执行文件：
 | **支付宝** | **微信支付** |
 | :---: | :---: |
 | <img src="doc/donate/alipay-2.png" width="250px"> | <img src="doc/donate/wechat-pay.jpg" width="250px"> |
+
+## 许可证
+
+本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件。

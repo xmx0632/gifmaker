@@ -1,6 +1,12 @@
 # Git Commit Log
 
 ## 2025-03-04
+docs(license): 添加MIT许可证
+
+- 创建 LICENSE 文件，采用 MIT 许可证
+- 在 README.md 和 README_zh.md 中添加许可证声明
+- 完善项目的法律文档
+
 docs(readme): 添加赞赏码并优化文档展示
 
 - 在 README.md 中添加支付宝和微信支付的赞赏码

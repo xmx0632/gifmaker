@@ -199,3 +199,7 @@ If you find this tool useful, consider supporting its development:
 | **Alipay** | **WeChat Pay** |
 | :---: | :---: |
 | <img src="doc/donate/alipay-2.png" width="250px"> | <img src="doc/donate/wechat-pay.jpg" width="250px"> |
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
