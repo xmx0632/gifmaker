@@ -7,6 +7,7 @@
 - 将多张图片合并成一张GIF动态图片
 - 支持设置帧延迟时间
 - 支持多种图片格式
+- **支持将不同大小的图片调整为统一大小**
 - 跨平台支持：Windows、macOS Intel、macOS ARM架构和Linux
 
 ## 使用方法
@@ -22,7 +23,12 @@
 
 # 使用不同的文件匹配模式
 ./gif-maker -i ./images -o output.gif -d 200 -p "*.jpg"
+
+# 调整图片大小后创建GIF
+./gif-maker -i ./images -o resized.gif -d 200 -r -w 800 --height 600
 ```
+
+
 
 ### 参数说明
 
@@ -30,6 +36,10 @@
 - `-o, --output`: 输出GIF文件路径（必需）
 - `-d, --duration`: 每一帧的延迟时间，单位为毫秒，默认为100
 - `-p, --pattern`: 文件匹配模式，默认为"*.png"
+- `-r, --resize`: 是否调整图片大小
+- `-w, --width`: 调整后的图片宽度
+- `--height`: 调整后的图片高度
+- `-k, --keep-aspect-ratio`: 是否保持原始宽高比，默认为是
 
 ## 安装说明
 
