@@ -1,10 +1,11 @@
 # GIF Maker
 
-将多张图片合并成一张GIF动态图片的跨平台工具。
+将多张图片或视频片段合并成一张GIF动态图片的跨平台工具。
 
 ## 功能特点
 
 - 将多张图片合并成一张GIF动态图片
+- **支持从视频文件提取片段制作GIF**
 - 支持设置帧延迟时间
 - 支持多种图片格式
 - **支持将不同大小的图片调整为统一大小**
@@ -14,36 +15,64 @@
 
 ### 命令行使用
 
+#### 从图片创建GIF
+
 ```bash
 # 基本用法
-./gif-maker -i 图片目录 -o 输出文件名.gif -d 帧延迟(毫秒)
+./gif-maker images -i 图片目录 -o 输出文件名.gif -d 帧延迟(毫秒)
 
 # 示例
-./gif-maker -i ./images -o output.gif -d 200
+./gif-maker images -i ./images -o output.gif -d 200
 
 # 使用不同的文件匹配模式
-./gif-maker -i ./images -o output.gif -d 200 -p "*.jpg"
+./gif-maker images -i ./images -o output.gif -d 200 -p "*.jpg"
 
 # 调整图片大小后创建GIF
-./gif-maker -i ./images -o resized.gif -d 200 -r -w 800 --height 600
+./gif-maker images -i ./images -o resized.gif -d 200 -r -w 800 --height 600
+
+# 向后兼容的旧语法（不推荐）
+./gif-maker -i ./images -o output.gif -d 100
 ```
 
+#### 从视频创建GIF
 
+```bash
+# 基本用法 - 提取整个视频
+./gif-maker video -i input.mp4 -o output.gif
+
+# 提取视频的特定片段（5秒到10秒）
+./gif-maker video -i input.mp4 -o clip.gif -s 5 -e 10
+
+# 调整帧率和大小
+./gif-maker video -i input.mp4 -o resized.gif -f 15 -r -w 640 --height 480
+```
 
 ### 参数说明
 
-- `-i, --input`: 输入图片目录（必需）
+#### 通用参数
 - `-o, --output`: 输出GIF文件路径（必需）
-- `-d, --duration`: 每一帧的延迟时间，单位为毫秒，默认为100
-- `-p, --pattern`: 文件匹配模式，默认为"*.png"
 - `-r, --resize`: 是否调整图片大小
 - `-w, --width`: 调整后的图片宽度
 - `--height`: 调整后的图片高度
 - `-k, --keep-aspect-ratio`: 是否保持原始宽高比，默认为是
 
+#### 图片模式参数
+- `-i, --input`: 输入图片目录（必需）
+- `-d, --duration`: 每一帧的延迟时间，单位为毫秒，默认为100
+- `-p, --pattern`: 文件匹配模式，默认为"*.png"
+
+#### 视频模式参数
+- `-i, --input`: 输入视频文件路径（必需）
+- `-s, --start`: 开始时间，单位为秒，默认为0
+- `-e, --end`: 结束时间，单位为秒，默认为视频结束
+- `-f, --fps`: 每秒提取的帧数，默认为10
+- `-d, --duration`: 每一帧的延迟时间，单位为毫秒，默认根据fps自动计算
+
 ## 安装说明
 
 本工具提供了预编译的可执行文件，无需安装Python或其他依赖即可使用。
+
+> **注意**：视频处理功能需要安装OpenCV库。如果使用预编译版本，该依赖已包含在内。如果从源码运行，需要额外安装 `opencv-python` 包。
 
 ### Windows
 
@@ -94,7 +123,18 @@ python3 -m venv git_env
 source git_env/bin/activate
 ```
 
-3. 安装依赖：`pip install -r requirements.txt`
+3. 安装依赖：
+   ```bash
+   # 基本功能
+   pip install Pillow
+   
+   # 视频处理功能（可选）
+   pip install opencv-python
+   
+   # 或者直接安装所有依赖
+   pip install -r requirements.txt
+   ```
+
 4. 运行构建脚本：`python build.py`
 5. 完成后可以退出虚拟环境：`deactivate`
 

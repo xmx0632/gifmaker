@@ -17,8 +17,17 @@ import os
 import argparse
 import tempfile
 import shutil
+import math
 from PIL import Image
 import glob
+
+# 用于处理视频文件
+try:
+    import cv2
+    OPENCV_AVAILABLE = True
+except ImportError:
+    OPENCV_AVAILABLE = False
+    print("警告: 未安装opencv-python库，视频处理功能将不可用。请使用 'pip install opencv-python' 安装。")
 
 def resize_images(image_list, target_size=None, keep_aspect_ratio=True):
     """
@@ -192,35 +201,236 @@ def create_gif_from_directory(input_dir, output_file, duration=100, pattern="*.p
     else:
         return create_gif(image_paths, output_file, duration)
 
+def extract_frames_from_video(video_path, start_time=0, end_time=None, fps=10, target_size=None, keep_aspect_ratio=True):
+    """
+    从视频文件中提取帧并返回图像列表
+    
+    参数:
+        video_path: 视频文件路径
+        start_time: 开始时间（秒）
+        end_time: 结束时间（秒），如果为None则提取到视频结束
+        fps: 每秒提取的帧数
+        target_size: 目标大小，格式为(宽, 高)
+        keep_aspect_ratio: 是否保持原始宽高比
+    
+    返回:
+        list: 提取的帧（Image对象）列表
+    """
+    if not OPENCV_AVAILABLE:
+        print("错误: 未安装opencv-python库，无法处理视频文件。请使用 'pip install opencv-python' 安装。")
+        return []
+    
+    try:
+        # 打开视频文件
+        cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            print(f"错误: 无法打开视频文件 {video_path}")
+            return []
+        
+        # 获取视频信息
+        video_fps = cap.get(cv2.CAP_PROP_FPS)
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        video_duration = total_frames / video_fps if video_fps > 0 else 0
+        
+        # 如果未指定结束时间，则使用视频总时长
+        if end_time is None or end_time > video_duration:
+            end_time = video_duration
+        
+        # 计算需要提取的帧
+        start_frame = int(start_time * video_fps)
+        end_frame = int(end_time * video_fps)
+        
+        # 计算提取间隔（每隔多少帧提取一帧）
+        if fps >= video_fps:
+            # 如果请求的fps大于等于视频fps，则提取所有帧
+            interval = 1
+        else:
+            # 否则按比例提取
+            interval = int(video_fps / fps)
+        
+        print(f"视频信息: {video_duration:.2f}秒, {video_fps:.2f}fps, 总帧数: {total_frames}")
+        print(f"提取设置: {start_time}秒 到 {end_time}秒, 输出{fps}fps, 提取间隔: {interval}帧")
+        
+        # 设置起始位置
+        cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+        
+        frames = []
+        frame_count = 0
+        extracted_count = 0
+        
+        while True:
+            ret, frame = cap.read()
+            if not ret or frame_count > (end_frame - start_frame):
+                break
+            
+            # 按间隔提取帧
+            if frame_count % interval == 0:
+                # 转换BGR到RGB（OpenCV使用BGR，PIL使用RGB）
+                rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                pil_img = Image.fromarray(rgb_frame)
+                
+                # 如果需要调整大小
+                if target_size:
+                    if keep_aspect_ratio:
+                        # 保持宽高比
+                        pil_img.thumbnail(target_size, Image.Resampling.LANCZOS)
+                        # 创建新的透明背景
+                        new_img = Image.new("RGBA", target_size, (255, 255, 255, 0))
+                        # 居中粘贴
+                        paste_x = (target_size[0] - pil_img.width) // 2
+                        paste_y = (target_size[1] - pil_img.height) // 2
+                        new_img.paste(pil_img, (paste_x, paste_y))
+                        pil_img = new_img
+                    else:
+                        # 直接调整大小
+                        pil_img = pil_img.resize(target_size, Image.Resampling.LANCZOS)
+                
+                frames.append(pil_img)
+                extracted_count += 1
+                
+                # 显示进度
+                if extracted_count % 10 == 0:
+                    print(f"已提取 {extracted_count} 帧...")
+            
+            frame_count += 1
+        
+        cap.release()
+        print(f"共提取 {len(frames)} 帧")
+        return frames
+    
+    except Exception as e:
+        print(f"提取视频帧时出错: {e}")
+        return []
+
+def create_gif_from_video(video_path, output_file, start_time=0, end_time=None, fps=10, duration=None, target_size=None, keep_aspect_ratio=True):
+    """
+    从视频文件创建GIF
+    
+    参数:
+        video_path: 视频文件路径
+        output_file: 输出的GIF文件路径
+        start_time: 开始时间（秒）
+        end_time: 结束时间（秒），如果为None则提取到视频结束
+        fps: 每秒提取的帧数
+        duration: 每一帧的延迟时间（毫秒），如果为None则根据fps自动计算
+        target_size: 目标大小，格式为(宽, 高)
+        keep_aspect_ratio: 是否保持原始宽高比
+    
+    返回:
+        bool: 是否成功创建GIF
+    """
+    # 提取视频帧
+    frames = extract_frames_from_video(video_path, start_time, end_time, fps, target_size, keep_aspect_ratio)
+    
+    if not frames:
+        print("错误: 没有从视频中提取到有效帧")
+        return False
+    
+    # 如果未指定duration，则根据fps计算
+    if duration is None:
+        duration = int(1000 / fps)  # 将fps转换为毫秒延迟
+    
+    # 创建GIF
+    try:
+        # 确保输出目录存在
+        output_dir = os.path.dirname(output_file)
+        if output_dir and not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+            print(f"创建输出目录: {output_dir}")
+        
+        # 保存为GIF
+        frames[0].save(
+            output_file,
+            format='GIF',
+            append_images=frames[1:],
+            save_all=True,
+            duration=duration,  # 毫秒
+            loop=0  # 0表示无限循环
+        )
+        
+        print(f"成功创建GIF: {output_file}")
+        return True
+    
+    except Exception as e:
+        print(f"创建GIF时出错: {e}")
+        return False
+
 def main():
     # 解析命令行参数
-    parser = argparse.ArgumentParser(description='将多张图片合并成GIF动态图片')
-    parser.add_argument('-i', '--input', required=True, help='输入图片目录')
-    parser.add_argument('-o', '--output', required=True, help='输出GIF文件路径')
-    parser.add_argument('-d', '--duration', type=int, default=100, help='每一帧的延迟时间(毫秒)，默认100')
-    parser.add_argument('-p', '--pattern', default='*.png', help='文件匹配模式，默认为"*.png"')
-    parser.add_argument('-r', '--resize', action='store_true', help='是否调整图片大小')
-    parser.add_argument('-w', '--width', type=int, help='调整后的图片宽度')
-    parser.add_argument('--height', type=int, help='调整后的图片高度')
-    parser.add_argument('-k', '--keep-aspect-ratio', action='store_true', default=True, help='是否保持原始宽高比')
+    parser = argparse.ArgumentParser(description='将多张图片或视频片段合并成GIF动态图片')
+    
+    # 创建子命令解析器
+    subparsers = parser.add_subparsers(dest='command', help='命令')
+    
+    # 从图片创建GIF的子命令
+    img_parser = subparsers.add_parser('images', help='从图片创建GIF')
+    img_parser.add_argument('-i', '--input', required=True, help='输入图片目录')
+    img_parser.add_argument('-o', '--output', required=True, help='输出GIF文件路径')
+    img_parser.add_argument('-d', '--duration', type=int, default=100, help='每一帧的延迟时间(毫秒)，默认100')
+    img_parser.add_argument('-p', '--pattern', default='*.png', help='文件匹配模式，默认为"*.png"')
+    img_parser.add_argument('-r', '--resize', action='store_true', help='是否调整图片大小')
+    img_parser.add_argument('-w', '--width', type=int, help='调整后的图片宽度')
+    img_parser.add_argument('--height', type=int, help='调整后的图片高度')
+    img_parser.add_argument('-k', '--keep-aspect-ratio', action='store_true', default=True, help='是否保持原始宽高比')
+    
+    # 从视频创建GIF的子命令
+    video_parser = subparsers.add_parser('video', help='从视频创建GIF')
+    video_parser.add_argument('-i', '--input', required=True, help='输入视频文件路径')
+    video_parser.add_argument('-o', '--output', required=True, help='输出GIF文件路径')
+    video_parser.add_argument('-s', '--start', type=float, default=0, help='开始时间(秒)，默认0')
+    video_parser.add_argument('-e', '--end', type=float, help='结束时间(秒)，默认为视频结束')
+    video_parser.add_argument('-f', '--fps', type=float, default=10, help='每秒提取的帧数，默认10')
+    video_parser.add_argument('-d', '--duration', type=int, help='每一帧的延迟时间(毫秒)，默认根据fps自动计算')
+    video_parser.add_argument('-r', '--resize', action='store_true', help='是否调整图片大小')
+    video_parser.add_argument('-w', '--width', type=int, help='调整后的图片宽度')
+    video_parser.add_argument('--height', type=int, help='调整后的图片高度')
+    video_parser.add_argument('-k', '--keep-aspect-ratio', action='store_true', default=True, help='是否保持原始宽高比')
     
     args = parser.parse_args()
     
+    # 如果没有指定子命令，默认使用images命令（向后兼容）
+    if not args.command:
+        print("未指定命令，默认使用'images'命令处理图片目录")
+        args.command = 'images'
+        
+        # 为兼容旧版本，检查是否提供了必要的参数
+        if not hasattr(args, 'input') or not hasattr(args, 'output'):
+            parser.print_help()
+            return
+    
     # 设置目标大小
     target_size = None
-    if args.width and args.height:
+    if hasattr(args, 'width') and hasattr(args, 'height') and args.width and args.height:
         target_size = (args.width, args.height)
     
-    # 创建GIF
-    create_gif_from_directory(
-        args.input, 
-        args.output, 
-        args.duration, 
-        args.pattern, 
-        args.resize, 
-        target_size, 
-        args.keep_aspect_ratio
-    )
+    # 根据命令执行相应的操作
+    if args.command == 'images':
+        # 从图片创建GIF
+        create_gif_from_directory(
+            args.input, 
+            args.output, 
+            args.duration, 
+            args.pattern, 
+            args.resize, 
+            target_size, 
+            args.keep_aspect_ratio
+        )
+    elif args.command == 'video':
+        # 从视频创建GIF
+        if not OPENCV_AVAILABLE:
+            print("错误: 未安装opencv-python库，无法处理视频文件。请使用 'pip install opencv-python' 安装。")
+            return
+        
+        create_gif_from_video(
+            args.input,
+            args.output,
+            args.start,
+            args.end,
+            args.fps,
+            args.duration,
+            target_size,
+            args.keep_aspect_ratio
+        )
 
 if __name__ == "__main__":
     main()
