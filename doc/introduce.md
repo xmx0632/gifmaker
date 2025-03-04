@@ -166,7 +166,14 @@ GifMaker是一个简单而强大的GIF制作工具，适合各类用户使用。
 
 ## 下载信息
 
-- 项目地址：https://github.com/xmx0632/gifmaker
-- 下载地址：https://github.com/xmx0632/gifmaker/releases
-- 最新版本：支持调整图片大小功能，新增从视频创建GIF功能
-- 支持平台：Windows、macOS Intel、macOS ARM架构和Linux
+- github
+
+  - 项目地址 github：https://github.com/xmx0632/gifmaker
+  - 下载地址 github：https://github.com/xmx0632/gifmaker/releases
+
+
+- gitee
+  - 项目地址 gitee：https://gitee.com/xmx0632/gifmaker
+  - 下载地址 gitee：https://gitee.com/xmx0632/gifmaker/releases
+
+支持平台：Windows、macOS Intel、macOS ARM架构和Linux
