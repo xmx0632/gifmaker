@@ -30,6 +30,20 @@ A cross-platform tool for combining multiple images or video clips into a single
 # Creating GIF with resized images
 ./gif-maker images -i ./images -o resized.gif -d 200 -r -w 800 --height 600
 
+# Using fill mode (default)
+./gif-maker images -i ./images -o filled.gif -d 300 -r -w 250 --height 500 -k
+```
+
+<img src="doc/images/filled.gif" width="30%">
+
+```bash
+# Using center mode
+./gif-maker images -i ./images -o centered.gif -d 300 -r -w 250 --height 500 -k --fill-mode center
+```
+
+<img src="doc/images/centered.gif" width="30%">
+
+```bash
 # Legacy syntax (not recommended)
 ./gif-maker -i ./images -o output.gif -d 100
 ```
@@ -44,8 +58,16 @@ A cross-platform tool for combining multiple images or video clips into a single
 ./gif-maker video -i input.mp4 -o clip.gif -s 5 -e 10
 
 # Adjust frame rate and size
-./gif-maker video -i input.mp4 -o resized.gif -f 15 -r -w 640 --height 480
+./gif-maker video -i input.mp4 -o video_clip.gif -f 10 -r -w 480 --height 320
 ```
+
+Original video:
+
+<video src="doc/images/video.mp4" controls width="30%"></video>
+
+Generated GIF:
+
+<img src="doc/images/video_clip.gif" width="30%">
 
 ### Parameter Description
 

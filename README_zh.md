@@ -30,6 +30,21 @@
 # 调整图片大小后创建GIF
 ./gif-maker images -i ./images -o resized.gif -d 200 -r -w 800 --height 600
 
+# 使用填充模式（默认）
+./gif-maker images -i ./images -o filled.gif -d 300 -r -w 250 --height 500 -k
+
+```
+
+<img src="doc/images/filled.gif" width="30%">
+
+```bash
+# 使用居中模式
+./gif-maker images -i ./images -o centered.gif -d 300 -r -w 250 --height 500 -k --fill-mode center
+```
+
+<img src="doc/images/centered.gif" width="30%">
+
+```bash
 # 向后兼容的旧语法（不推荐）
 ./gif-maker -i ./images -o output.gif -d 100
 ```
@@ -44,8 +59,17 @@
 ./gif-maker video -i input.mp4 -o clip.gif -s 5 -e 10
 
 # 调整帧率和大小
-./gif-maker video -i input.mp4 -o resized.gif -f 15 -r -w 640 --height 480
+./gif-maker video -i input.mp4 -o video_clip.gif -f 10 -r -w 480 --height 320
+
 ```
+
+原始视频：
+
+<video src="doc/images/video.mp4" controls width="30%"></video>
+
+生成的GIF：
+
+<img src="doc/images/video_clip.gif" width="30%">
 
 ### 参数说明
 

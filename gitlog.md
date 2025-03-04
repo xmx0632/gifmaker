@@ -1,6 +1,18 @@
 # Git Commit Log
 
 ## 2025-03-04
+docs(readme): 调整文档格式，优化图片和代码块的展示
+
+- 调整 README.md 和 README_zh.md 中的代码块和图片排版
+- 分离代码块和图片展示，提高可读性
+- 保持中英文文档格式一致性
+
+docs(readme): 在README中添加演示图片和视频
+
+- 在 README.md 和 README_zh.md 中添加填充模式和居中模式的演示图片
+- 添加视频转GIF的原始视频和生成结果的对比展示
+- 优化命令行示例，增强文档的直观性
+
 docs(license): 添加MIT许可证
 
 - 创建 LICENSE 文件，采用 MIT 许可证
