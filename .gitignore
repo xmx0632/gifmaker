@@ -3,3 +3,4 @@ git_env
 gif_env
 test_output
 *.spec
+build

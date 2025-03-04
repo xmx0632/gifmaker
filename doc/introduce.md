@@ -79,12 +79,44 @@ GifMaker现在支持两种模式：从图片创建GIF和从视频创建GIF。
 
 这条命令会先将所有图片调整为800×600的大小，然后生成GIF，每张图片显示0.2秒。
 
+
+
+#### 使用填充模式
+
+```bash
+./gif-maker images -i images -o filled.gif -d 300 -r -w 250 --height 500 -k
+```
+
+
+<img src="images/filled.gif" width="30%">
+
+
+
+这条命令会将图片调整为250×500的大小，并默认使用“填充”模式确保图片完全填满指定尺寸，不会有空白区域。这种模式会在保持宽高比的同时，对图片进行适当裁剪，以确保填满整个画面。
+
+如果想要使用居中放置模式（可能有空白区域），可以指定 `--fill-mode center` 参数：
+```bash
+./gif-maker images -i images -o centered.gif -d 300 -r -w 250 --height 500 -k --fill-mode center
+```
+
+<img src="images/centered.gif" width="30%">
+
+
 #### 从视频创建GIF
 ```bash
-./gif-maker video -i video.mp4 -o video_clip.gif -s 5 -e 10 -f 15 -r -w 480 --height 320
+./gif-maker video -i video.mp4 -o video_clip.gif -s 5 -e 10 -f 10 -r -w 480 --height 320
 ```
 
 这条命令会从`video.mp4`视频的第5秒到第10秒提取帧，每秒提取15帧，调整为480×320的大小，然后生成GIF动图。
+
+原始视频：
+
+<video src="images/video.mp4" controls width="30%"></video>
+
+
+生成的GIF：
+
+<img src="images/video_clip.gif" width="30%">
 
 #### 图片模式参数说明
 
@@ -96,6 +128,9 @@ GifMaker现在支持两种模式：从图片创建GIF和从视频创建GIF。
 - `-w, --width`: 调整后的图片宽度
 - `--height`: 调整后的图片高度
 - `-k, --keep-aspect-ratio`: 是否保持原始宽高比，默认为是
+- `--fill-mode`: 填充模式，当保持宽高比时的处理方式，可选值：
+  - `fill`: 缩放并裁剪，确保填满整个画面（默认）
+  - `center`: 居中放置，周围可能有空白
 
 #### 视频模式参数说明
 
@@ -109,6 +144,9 @@ GifMaker现在支持两种模式：从图片创建GIF和从视频创建GIF。
 - `-w, --width`: 调整后的图片宽度
 - `--height`: 调整后的图片高度
 - `-k, --keep-aspect-ratio`: 是否保持原始宽高比，默认为是
+- `--fill-mode`: 填充模式，当保持宽高比时的处理方式，可选值：
+  - `fill`: 缩放并裁剪，确保填满整个画面（默认）
+  - `center`: 居中放置，周围可能有空白
 
 ### 4. 查看结果
 

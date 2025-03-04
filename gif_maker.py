@@ -29,7 +29,7 @@ except ImportError:
     OPENCV_AVAILABLE = False
     print("警告: 未安装opencv-python库，视频处理功能将不可用。请使用 'pip install opencv-python' 安装。")
 
-def resize_images(image_list, target_size=None, keep_aspect_ratio=True):
+def resize_images(image_list, target_size=None, keep_aspect_ratio=True, fill_mode='fill'):
     """
     将图片列表中的所有图片调整为统一大小
     
@@ -37,6 +37,9 @@ def resize_images(image_list, target_size=None, keep_aspect_ratio=True):
         image_list: 图片文件路径列表
         target_size: 目标大小，格式为(宽, 高)。如果为None，则使用第一张图片的大小
         keep_aspect_ratio: 是否保持原始宽高比
+        fill_mode: 填充模式，可选值：
+            - 'center': 居中放置，周围可能有透明区域
+            - 'fill': 缩放并裁剪，确保填满整个画面
     
     返回:
         list: 调整大小后的Image对象列表
@@ -55,15 +58,40 @@ def resize_images(image_list, target_size=None, keep_aspect_ratio=True):
             img = Image.open(img_path)
             
             if keep_aspect_ratio:
-                # 保持宽高比的调整大小
-                img.thumbnail(target_size, Image.Resampling.LANCZOS)
-                # 创建一个新的白色背景图像
-                new_img = Image.new("RGBA", target_size, (255, 255, 255, 0))
-                # 将调整后的图像粘贴到中心位置
-                paste_x = (target_size[0] - img.width) // 2
-                paste_y = (target_size[1] - img.height) // 2
-                new_img.paste(img, (paste_x, paste_y))
-                resized_images.append(new_img)
+                if fill_mode == 'center':
+                    # 保持宽高比的调整大小，居中放置
+                    img.thumbnail(target_size, Image.Resampling.LANCZOS)
+                    # 创建一个新的透明背景图像
+                    new_img = Image.new("RGBA", target_size, (255, 255, 255, 0))
+                    # 将调整后的图像粘贴到中心位置
+                    paste_x = (target_size[0] - img.width) // 2
+                    paste_y = (target_size[1] - img.height) // 2
+                    new_img.paste(img, (paste_x, paste_y))
+                    resized_images.append(new_img)
+                elif fill_mode == 'fill':
+                    # 保持宽高比但确保填满整个画面（可能会裁剪部分内容）
+                    # 计算宽高比
+                    target_ratio = target_size[0] / target_size[1]
+                    img_ratio = img.width / img.height
+                    
+                    if img_ratio > target_ratio:
+                        # 图片较宽，以高度为准进行缩放，然后裁剪宽度
+                        new_height = target_size[1]
+                        new_width = int(new_height * img_ratio)
+                        img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                        # 裁剪中心部分
+                        left = (new_width - target_size[0]) // 2
+                        img = img.crop((left, 0, left + target_size[0], new_height))
+                    else:
+                        # 图片较高，以宽度为准进行缩放，然后裁剪高度
+                        new_width = target_size[0]
+                        new_height = int(new_width / img_ratio)
+                        img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                        # 裁剪中心部分
+                        top = (new_height - target_size[1]) // 2
+                        img = img.crop((0, top, new_width, top + target_size[1]))
+                    
+                    resized_images.append(img)
             else:
                 # 不保持宽高比，直接调整到目标大小
                 resized_img = img.resize(target_size, Image.Resampling.LANCZOS)
@@ -74,7 +102,7 @@ def resize_images(image_list, target_size=None, keep_aspect_ratio=True):
     
     return resized_images
 
-def create_gif_with_resize(image_list, output_file, duration=100, target_size=None, keep_aspect_ratio=True):
+def create_gif_with_resize(image_list, output_file, duration=100, target_size=None, keep_aspect_ratio=True, fill_mode='fill'):
     """
     将多张图片调整为统一大小后合并成一张GIF动态图片
     
@@ -90,7 +118,7 @@ def create_gif_with_resize(image_list, output_file, duration=100, target_size=No
     """
     try:
         # 调整所有图片大小
-        resized_images = resize_images(image_list, target_size, keep_aspect_ratio)
+        resized_images = resize_images(image_list, target_size, keep_aspect_ratio, fill_mode)
         
         if not resized_images:
             print("错误: 没有有效的图片可以处理")
@@ -173,7 +201,7 @@ def create_gif(image_list, output_file, duration=100):
         print(f"创建GIF时出错: {e}")
         return False
 
-def create_gif_from_directory(input_dir, output_file, duration=100, pattern="*.png", resize=False, target_size=None, keep_aspect_ratio=True):
+def create_gif_from_directory(input_dir, output_file, duration=100, pattern="*.png", resize=False, target_size=None, keep_aspect_ratio=True, fill_mode='fill'):
     """
     从指定目录读取所有图片并创建GIF
     
@@ -197,11 +225,11 @@ def create_gif_from_directory(input_dir, output_file, duration=100, pattern="*.p
     
     # 根据是否需要调整大小选择不同的处理函数
     if resize:
-        return create_gif_with_resize(image_paths, output_file, duration, target_size, keep_aspect_ratio)
+        return create_gif_with_resize(image_paths, output_file, duration, target_size, keep_aspect_ratio, fill_mode)
     else:
         return create_gif(image_paths, output_file, duration)
 
-def extract_frames_from_video(video_path, start_time=0, end_time=None, fps=10, target_size=None, keep_aspect_ratio=True):
+def extract_frames_from_video(video_path, start_time=0, end_time=None, fps=10, target_size=None, keep_aspect_ratio=True, fill_mode='fill'):
     """
     从视频文件中提取帧并返回图像列表
     
@@ -272,15 +300,38 @@ def extract_frames_from_video(video_path, start_time=0, end_time=None, fps=10, t
                 # 如果需要调整大小
                 if target_size:
                     if keep_aspect_ratio:
-                        # 保持宽高比
-                        pil_img.thumbnail(target_size, Image.Resampling.LANCZOS)
-                        # 创建新的透明背景
-                        new_img = Image.new("RGBA", target_size, (255, 255, 255, 0))
-                        # 居中粘贴
-                        paste_x = (target_size[0] - pil_img.width) // 2
-                        paste_y = (target_size[1] - pil_img.height) // 2
-                        new_img.paste(pil_img, (paste_x, paste_y))
-                        pil_img = new_img
+                        if fill_mode == 'center':
+                            # 保持宽高比，居中放置
+                            pil_img.thumbnail(target_size, Image.Resampling.LANCZOS)
+                            # 创建新的透明背景
+                            new_img = Image.new("RGBA", target_size, (255, 255, 255, 0))
+                            # 居中粘贴
+                            paste_x = (target_size[0] - pil_img.width) // 2
+                            paste_y = (target_size[1] - pil_img.height) // 2
+                            new_img.paste(pil_img, (paste_x, paste_y))
+                            pil_img = new_img
+                        elif fill_mode == 'fill':
+                            # 保持宽高比但确保填满整个画面
+                            # 计算宽高比
+                            target_ratio = target_size[0] / target_size[1]
+                            img_ratio = pil_img.width / pil_img.height
+                            
+                            if img_ratio > target_ratio:
+                                # 图片较宽，以高度为准进行缩放，然后裁剪宽度
+                                new_height = target_size[1]
+                                new_width = int(new_height * img_ratio)
+                                pil_img = pil_img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                                # 裁剪中心部分
+                                left = (new_width - target_size[0]) // 2
+                                pil_img = pil_img.crop((left, 0, left + target_size[0], new_height))
+                            else:
+                                # 图片较高，以宽度为准进行缩放，然后裁剪高度
+                                new_width = target_size[0]
+                                new_height = int(new_width / img_ratio)
+                                pil_img = pil_img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                                # 裁剪中心部分
+                                top = (new_height - target_size[1]) // 2
+                                pil_img = pil_img.crop((0, top, new_width, top + target_size[1]))
                     else:
                         # 直接调整大小
                         pil_img = pil_img.resize(target_size, Image.Resampling.LANCZOS)
@@ -302,7 +353,7 @@ def extract_frames_from_video(video_path, start_time=0, end_time=None, fps=10, t
         print(f"提取视频帧时出错: {e}")
         return []
 
-def create_gif_from_video(video_path, output_file, start_time=0, end_time=None, fps=10, duration=None, target_size=None, keep_aspect_ratio=True):
+def create_gif_from_video(video_path, output_file, start_time=0, end_time=None, fps=10, duration=None, target_size=None, keep_aspect_ratio=True, fill_mode='fill'):
     """
     从视频文件创建GIF
     
@@ -320,7 +371,7 @@ def create_gif_from_video(video_path, output_file, start_time=0, end_time=None, 
         bool: 是否成功创建GIF
     """
     # 提取视频帧
-    frames = extract_frames_from_video(video_path, start_time, end_time, fps, target_size, keep_aspect_ratio)
+    frames = extract_frames_from_video(video_path, start_time, end_time, fps, target_size, keep_aspect_ratio, fill_mode)
     
     if not frames:
         print("错误: 没有从视频中提取到有效帧")
@@ -372,6 +423,7 @@ def main():
     img_parser.add_argument('-w', '--width', type=int, help='调整后的图片宽度')
     img_parser.add_argument('--height', type=int, help='调整后的图片高度')
     img_parser.add_argument('-k', '--keep-aspect-ratio', action='store_true', default=True, help='是否保持原始宽高比')
+    img_parser.add_argument('--fill-mode', choices=['center', 'fill'], default='fill', help='填充模式，当保持宽高比时：center=居中放置，fill=缩放裁剪填满画面（默认）')
     
     # 从视频创建GIF的子命令
     video_parser = subparsers.add_parser('video', help='从视频创建GIF')
@@ -385,6 +437,7 @@ def main():
     video_parser.add_argument('-w', '--width', type=int, help='调整后的图片宽度')
     video_parser.add_argument('--height', type=int, help='调整后的图片高度')
     video_parser.add_argument('-k', '--keep-aspect-ratio', action='store_true', default=True, help='是否保持原始宽高比')
+    video_parser.add_argument('--fill-mode', choices=['center', 'fill'], default='fill', help='填充模式，当保持宽高比时：center=居中放置，fill=缩放裁剪填满画面（默认）')
     
     args = parser.parse_args()
     
@@ -406,6 +459,7 @@ def main():
     # 根据命令执行相应的操作
     if args.command == 'images':
         # 从图片创建GIF
+        fill_mode = getattr(args, 'fill_mode', 'fill')  # 兼容旧版本
         create_gif_from_directory(
             args.input, 
             args.output, 
@@ -413,7 +467,8 @@ def main():
             args.pattern, 
             args.resize, 
             target_size, 
-            args.keep_aspect_ratio
+            args.keep_aspect_ratio,
+            fill_mode
         )
     elif args.command == 'video':
         # 从视频创建GIF
@@ -421,6 +476,7 @@ def main():
             print("错误: 未安装opencv-python库，无法处理视频文件。请使用 'pip install opencv-python' 安装。")
             return
         
+        fill_mode = getattr(args, 'fill_mode', 'fill')  # 兼容旧版本
         create_gif_from_video(
             args.input,
             args.output,
@@ -429,7 +485,8 @@ def main():
             args.fps,
             args.duration,
             target_size,
-            args.keep_aspect_ratio
+            args.keep_aspect_ratio,
+            fill_mode
         )
 
 if __name__ == "__main__":
