@@ -1,6 +1,12 @@
 # Git Commit Log
 
 ## 2025-03-04
+docs(readme): 添加赞赏码并优化文档展示
+
+- 在 README.md 中添加支付宝和微信支付的赞赏码
+- 使用 Markdown 表格将两个收款码并排展示
+- 在 introduce.md 中添加演示图片和视频示例
+
 feat(resize): 将fill模式设为默认选项
 
 - 将 `fill-mode` 参数的默认值从 `center` 改为 `fill`

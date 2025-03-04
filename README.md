@@ -1,190 +1,201 @@
 # GIF Maker
 
-将多张图片或视频片段合并成一张GIF动态图片的跨平台工具。
+A cross-platform tool for combining multiple images or video clips into a single animated GIF.
 
-## 功能特点
+## Features
 
-- 将多张图片合并成一张GIF动态图片
-- **支持从视频文件提取片段制作GIF**
-- 支持设置帧延迟时间
-- 支持多种图片格式
-- **支持将不同大小的图片调整为统一大小**
-- 跨平台支持：Windows、macOS Intel、macOS ARM架构和Linux
+- Combine multiple images into an animated GIF
+- **Extract frames from video files to create GIFs**
+- Customize frame delay time
+- Support for various image formats
+- **Resize images of different sizes to a uniform dimension**
+- Cross-platform support: Windows, macOS (Intel & ARM architecture), and Linux
 
-## 使用方法
+## Usage
 
-### 命令行使用
+### Command Line Usage
 
-#### 从图片创建GIF
+#### Creating GIFs from Images
 
 ```bash
-# 基本用法
-./gif-maker images -i 图片目录 -o 输出文件名.gif -d 帧延迟(毫秒)
+# Basic usage
+./gif-maker images -i image_directory -o output_filename.gif -d frame_delay_ms
 
-# 示例
+# Example
 ./gif-maker images -i ./images -o output.gif -d 200
 
-# 使用不同的文件匹配模式
+# Using different file matching pattern
 ./gif-maker images -i ./images -o output.gif -d 200 -p "*.jpg"
 
-# 调整图片大小后创建GIF
+# Creating GIF with resized images
 ./gif-maker images -i ./images -o resized.gif -d 200 -r -w 800 --height 600
 
-# 向后兼容的旧语法（不推荐）
+# Legacy syntax (not recommended)
 ./gif-maker -i ./images -o output.gif -d 100
 ```
 
-#### 从视频创建GIF
+#### Creating GIFs from Videos
 
 ```bash
-# 基本用法 - 提取整个视频
+# Basic usage - extract the entire video
 ./gif-maker video -i input.mp4 -o output.gif
 
-# 提取视频的特定片段（5秒到10秒）
+# Extract a specific segment (5 to 10 seconds)
 ./gif-maker video -i input.mp4 -o clip.gif -s 5 -e 10
 
-# 调整帧率和大小
+# Adjust frame rate and size
 ./gif-maker video -i input.mp4 -o resized.gif -f 15 -r -w 640 --height 480
 ```
 
-### 参数说明
+### Parameter Description
 
-#### 通用参数
-- `-o, --output`: 输出GIF文件路径（必需）
-- `-r, --resize`: 是否调整图片大小
-- `-w, --width`: 调整后的图片宽度
-- `--height`: 调整后的图片高度
-- `-k, --keep-aspect-ratio`: 是否保持原始宽高比，默认为是
+#### Common Parameters
+- `-o, --output`: Output GIF file path (required)
+- `-r, --resize`: Whether to resize images
+- `-w, --width`: Width of resized images
+- `--height`: Height of resized images
+- `-k, --keep-aspect-ratio`: Whether to maintain the original aspect ratio (default: yes)
+- `--fill-mode`: Fill mode when maintaining aspect ratio:
+  - `fill`: Scale and crop to fill the entire frame (default)
+  - `center`: Center the image, possibly leaving transparent areas
 
-#### 图片模式参数
-- `-i, --input`: 输入图片目录（必需）
-- `-d, --duration`: 每一帧的延迟时间，单位为毫秒，默认为100
-- `-p, --pattern`: 文件匹配模式，默认为"*.png"
+#### Image Mode Parameters
+- `-i, --input`: Input image directory (required)
+- `-d, --duration`: Delay time for each frame in milliseconds, default is 100
+- `-p, --pattern`: File matching pattern, default is "*.png"
 
-#### 视频模式参数
-- `-i, --input`: 输入视频文件路径（必需）
-- `-s, --start`: 开始时间，单位为秒，默认为0
-- `-e, --end`: 结束时间，单位为秒，默认为视频结束
-- `-f, --fps`: 每秒提取的帧数，默认为10
-- `-d, --duration`: 每一帧的延迟时间，单位为毫秒，默认根据fps自动计算
+#### Video Mode Parameters
+- `-i, --input`: Input video file path (required)
+- `-s, --start`: Start time in seconds, default is 0
+- `-e, --end`: End time in seconds, default is the end of the video
+- `-f, --fps`: Frames to extract per second, default is 10
+- `-d, --duration`: Delay time for each frame in milliseconds, default is automatically calculated based on fps
 
-## 安装说明
+## Installation
 
-本工具提供了预编译的可执行文件，无需安装Python或其他依赖即可使用。
+This tool provides pre-compiled executables that can be used without installing Python or other dependencies.
 
-> **注意**：视频处理功能需要安装OpenCV库。如果使用预编译版本，该依赖已包含在内。如果从源码运行，需要额外安装 `opencv-python` 包。
+> **Note**: Video processing functionality requires the OpenCV library. If you're using the pre-compiled version, this dependency is already included. If running from source code, you'll need to install the `opencv-python` package separately.
 
 ### Windows
 
-下载`windows`目录中的`gif-maker.exe`文件，双击运行或通过命令行使用。
+Download the `gif-maker.exe` file from the `windows` directory, then double-click to run or use it via command line.
 
 ### macOS Intel (x64)
 
-下载`macos/x64`目录中的`gif-maker`文件，通过终端使用：
+Download the `gif-maker` file from the `macos/x64` directory, then use it via terminal:
 
 ```bash
 chmod +x gif-maker
-./gif-maker -i 图片目录 -o 输出文件名.gif
+./gif-maker -i image_directory -o output_filename.gif
 ```
 
 ### macOS ARM (Apple Silicon)
 
-下载`macos/arm64`目录中的`gif-maker`文件，通过终端使用：
+Download the `gif-maker` file from the `macos/arm64` directory, then use it via terminal:
 
 ```bash
 chmod +x gif-maker
-./gif-maker -i 图片目录 -o 输出文件名.gif
+./gif-maker -i image_directory -o output_filename.gif
 ```
 
 ### Linux
 
-下载`linux`目录中的`gif-maker`文件，通过终端使用：
+Download the `gif-maker` file from the `linux` directory, then use it via terminal:
 
 ```bash
 chmod +x gif-maker
-./gif-maker -i 图片目录 -o 输出文件名.gif
+./gif-maker -i image_directory -o output_filename.gif
 ```
 
-## 从源代码构建
+## Building from Source
 
-如果您想从源代码构建可执行文件，请按照以下步骤操作：
+If you want to build the executable from source code, follow these steps:
 
-1. 安装Python 3.13或更高版本
-2. 创建并激活虚拟环境：
+1. Install Python 3.13 or higher
+2. Create and activate a virtual environment:
 
 ```bash
-# 创建名为git_env的虚拟环境
+# Create a virtual environment named git_env
 python3 -m venv git_env
 
-# 在Windows上激活虚拟环境
+# Activate the virtual environment on Windows
 # git_env\Scripts\activate
 
-# 在macOS/Linux上激活虚拟环境
+# Activate the virtual environment on macOS/Linux
 source git_env/bin/activate
 ```
 
-3. 安装依赖：
+3. Install dependencies:
    ```bash
-   # 基本功能
+   # Basic functionality
    pip install Pillow
    
-   # 视频处理功能（可选）
+   # Video processing functionality (optional)
    pip install opencv-python
    
-   # 或者直接安装所有依赖
+   # Or install all dependencies at once
    pip install -r requirements.txt
    ```
 
-4. 运行构建脚本：`python build.py`
-5. 完成后可以退出虚拟环境：`deactivate`
+4. Run the build script: `python build.py`
+5. When finished, you can deactivate the virtual environment: `deactivate`
 
-构建完成后，可执行文件将位于`dist`目录中。
+After building, the executable will be located in the `dist` directory.
 
-使用虚拟环境可以确保项目依赖不会与系统Python环境冲突，并且便于管理项目特定的依赖包。
+Using a virtual environment ensures that project dependencies don't conflict with your system Python environment and makes it easier to manage project-specific packages.
 
-## 使用GitHub Actions自动发布
+## Automated Releases with GitHub Actions
 
-本项目配置了GitHub Actions工作流，可以自动构建并发布跨平台的可执行文件。
+This project is configured with GitHub Actions workflows to automatically build and release cross-platform executables.
 
-### 发布新版本
+### Releasing a New Version
 
-#### 方法一：使用脚本发布
+#### Method 1: Using the Release Script
 
-1. 确保所有代码变更已提交到仓库
-2. 使用提供的发布脚本创建新版本：
+1. Ensure all code changes are committed to the repository
+2. Use the provided release script to create a new version:
 
 ```bash
-# 发布版本1.0.0
+# Release version 1.0.0
 ./release.sh 1.0.0
 ```
 
-3. 脚本会创建标签并推送到GitHub，触发GitHub Actions工作流
+3. The script will create a tag and push it to GitHub, triggering the GitHub Actions workflow
 
-#### 方法二：使用GitHub网页手动触发
+#### Method 2: Manual Trigger via GitHub Web Interface
 
-1. 在GitHub仓库页面上，点击“Actions”标签
-2. 在左侧工作流列表中，选择“Build and Release”
-3. 点击“Run workflow”按钮
-4. 输入版本号（例如：1.0.0），并选择是否为预发布版本
-5. 点击“Run workflow”开始构建
+1. On the GitHub repository page, click the "Actions" tab
+2. Select "Build and Release" from the workflow list on the left
+3. Click the "Run workflow" button
+4. Enter the version number (e.g., 1.0.0) and select whether it's a pre-release
+5. Click "Run workflow" to start the build
 
-#### 构建结果
+#### Build Results
 
-GitHub Actions将自动构建四种平台版本的可执行文件：
+GitHub Actions will automatically build executables for four platforms:
 - Windows
 - macOS Intel (x86_64)
 - macOS Apple Silicon (ARM64)
 - Linux
 
-构建完成后，可执行文件将自动上传到GitHub Releases页面
+After the build is complete, the executables will be automatically uploaded to the GitHub Releases page.
 
-### 工作流说明
+### Workflow Details
 
-- 工作流配置文件位于`.github/workflows/build-and-release.yml`
-- 工作流可通过两种方式触发：
-  - 推送以`v`开头的标签时自动触发（例如`v1.0.0`）
-  - 在GitHub Actions页面上手动触发，并指定版本号
-- 工作流会并行构建四种平台版本的可执行文件，包括两种macOS架构（Intel和Apple Silicon）
-- 工作流使用依赖缓存机制，显著减少重复安装时间，提高构建速度
-- 缓存基于`requirements.txt`文件的哈希值，当依赖项变化时才会重新安装
-- 构建完成后，工作流会创建一个新的GitHub Release并上传所有可执行文件
+- The workflow configuration is located in `.github/workflows/build-and-release.yml`
+- The workflow can be triggered in two ways:
+  - Automatically when a tag starting with `v` is pushed (e.g., `v1.0.0`)
+  - Manually from the GitHub Actions page, specifying a version number
+- The workflow builds executables for four platforms in parallel, including two macOS architectures (Intel and Apple Silicon)
+- The workflow uses dependency caching to significantly reduce installation time and improve build speed
+- Caching is based on the hash of the `requirements.txt` file, only reinstalling when dependencies change
+- After building, the workflow creates a new GitHub Release and uploads all executables
+
+## Donation
+
+If you find this tool useful, consider supporting its development:
+
+| **Alipay** | **WeChat Pay** |
+| :---: | :---: |
+| <img src="doc/donate/alipay-2.png" width="250px"> | <img src="doc/donate/wechat-pay.jpg" width="250px"> |
