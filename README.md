@@ -34,14 +34,14 @@ A cross-platform tool for combining multiple images or video clips into a single
 ./gif-maker images -i ./images -o filled.gif -d 300 -r -w 250 --height 500 -k
 ```
 
-<img src="doc/images/filled.gif" width="30%">
+<img src="docs/images/filled.gif" width="30%">
 
 ```bash
 # Using center mode
 ./gif-maker images -i ./images -o centered.gif -d 300 -r -w 250 --height 500 -k --fill-mode center
 ```
 
-<img src="doc/images/centered.gif" width="30%">
+<img src="docs/images/centered.gif" width="30%">
 
 ```bash
 # Legacy syntax (not recommended)
@@ -63,11 +63,11 @@ A cross-platform tool for combining multiple images or video clips into a single
 
 Original video:
 
-<video src="doc/images/video.mp4" controls width="30%"></video>
+<video src="docs/images/video.mp4" controls width="30%"></video>
 
 Generated GIF:
 
-<img src="doc/images/video_clip.gif" width="30%">
+<img src="docs/images/video_clip.gif" width="30%">
 
 ### Parameter Description
 
@@ -218,9 +218,9 @@ After the build is complete, the executables will be automatically uploaded to t
 
 If you find this tool useful, consider supporting its development:
 
-| **Alipay** | **WeChat Pay** |
-| :---: | :---: |
-| <img src="doc/donate/alipay-2.png" width="250px"> | <img src="doc/donate/wechat-pay.jpg" width="250px"> |
+|                     **Alipay**                     |                    **WeChat Pay**                    |
+| :------------------------------------------------: | :--------------------------------------------------: |
+| <img src="docs/donate/alipay-2.png" width="250px"> | <img src="docs/donate/wechat-pay.jpg" width="250px"> |
 
 ## License
 

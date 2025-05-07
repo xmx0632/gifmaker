@@ -35,14 +35,14 @@
 
 ```
 
-<img src="doc/images/filled.gif" width="30%">
+<img src="docs/images/filled.gif" width="30%">
 
 ```bash
 # 使用居中模式
 ./gif-maker images -i ./images -o centered.gif -d 300 -r -w 250 --height 500 -k --fill-mode center
 ```
 
-<img src="doc/images/centered.gif" width="30%">
+<img src="docs/images/centered.gif" width="30%">
 
 ```bash
 # 向后兼容的旧语法（不推荐）
@@ -65,11 +65,11 @@
 
 原始视频：
 
-<video src="doc/images/video.mp4" controls width="30%"></video>
+<video src="docs/images/video.mp4" controls width="30%"></video>
 
 生成的GIF：
 
-<img src="doc/images/video_clip.gif" width="30%">
+<img src="docs/images/video_clip.gif" width="30%">
 
 ### 参数说明
 
@@ -216,9 +216,9 @@ GitHub Actions将自动构建四种平台版本的可执行文件：
 
 ## 赞赏码
 
-| **支付宝** | **微信支付** |
-| :---: | :---: |
-| <img src="doc/donate/alipay-2.png" width="250px"> | <img src="doc/donate/wechat-pay.jpg" width="250px"> |
+|                     **支付宝**                     |                     **微信支付**                     |
+| :------------------------------------------------: | :--------------------------------------------------: |
+| <img src="docs/donate/alipay-2.png" width="250px"> | <img src="docs/donate/wechat-pay.jpg" width="250px"> |
 
 ## 许可证
 
