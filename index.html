@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GifMaker - 简单免费的GIF制作工具</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- 引入图标 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css">
+    <!-- shadcn样式 -->
+    <style>
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 222.2 84% 4.9%;
+            --popover: 0 0% 100%;
+            --popover-foreground: 222.2 84% 4.9%;
+            --primary: 221.2 83.2% 53.3%;
+            --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96.1%;
+            --secondary-foreground: 222.2 47.4% 11.2%;
+            --muted: 210 40% 96.1%;
+            --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96.1%;
+            --accent-foreground: 222.2 47.4% 11.2%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 214.3 31.8% 91.4%;
+            --input: 214.3 31.8% 91.4%;
+            --ring: 221.2 83.2% 53.3%;
+            --radius: 0.5rem;
+        }
+
+        .dark {
+            --background: 222.2 84% 4.9%;
+            --foreground: 210 40% 98%;
+            --card: 222.2 84% 4.9%;
+            --card-foreground: 210 40% 98%;
+            --popover: 222.2 84% 4.9%;
+            --popover-foreground: 210 40% 98%;
+            --primary: 217.2 91.2% 59.8%;
+            --primary-foreground: 222.2 47.4% 11.2%;
+            --secondary: 217.2 32.6% 17.5%;
+            --secondary-foreground: 210 40% 98%;
+            --muted: 217.2 32.6% 17.5%;
+            --muted-foreground: 215 20.2% 65.1%;
+            --accent: 217.2 32.6% 17.5%;
+            --accent-foreground: 210 40% 98%;
+            --destructive: 0 62.8% 30.6%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 217.2 32.6% 17.5%;
+            --input: 217.2 32.6% 17.5%;
+            --ring: 224.3 76.3% 48%;
+        }
+
+        * {
+            border-color: hsl(var(--border));
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: hsl(var(--background));
+            color: hsl(var(--foreground));
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius);
+            font-weight: 500;
+            transition-property: color, background-color, border-color;
+            transition-duration: 150ms;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-primary {
+            background-color: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+        }
+
+        .btn-primary:hover {
+            background-color: hsl(var(--primary) / 0.9);
+        }
+
+        .btn-secondary {
+            background-color: hsl(var(--secondary));
+            color: hsl(var(--secondary-foreground));
+        }
+
+        .btn-secondary:hover {
+            background-color: hsl(var(--secondary) / 0.8);
+        }
+
+        .card {
+            background-color: hsl(var(--card));
+            color: hsl(var(--card-foreground));
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .theme-toggle {
+            cursor: pointer;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeIcon();
+        }
+
+        function updateThemeIcon() {
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('theme-icon').className = isDark ? 'ri-sun-line' : 'ri-moon-line';
+        }
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            updateThemeIcon();
+        }
+    </script>
+</head>
+
+<body class="min-h-screen" onload="initTheme()">
+    <!-- 导航栏 -->
+    <header
+        class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div class="container flex h-16 items-center justify-between">
+            <div class="flex items-center gap-2">
+                <img src="doc/cover.png" alt="GifMaker Logo" class="h-8 w-8">
+                <span class="text-xl font-bold">GifMaker</span>
+            </div>
+            <nav class="hidden md:flex items-center gap-6">
+                <a href="#features" class="text-sm font-medium hover:text-primary">特点</a>
+                <a href="#usage" class="text-sm font-medium hover:text-primary">使用方法</a>
+                <a href="#download" class="text-sm font-medium hover:text-primary">下载</a>
+                <a href="#support" class="text-sm font-medium hover:text-primary">支持</a>
+            </nav>
+            <div class="flex items-center gap-4">
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <i id="theme-icon" class="ri-moon-line text-xl"></i>
+                </button>
+                <a href="https://github.com/xmx0632/gifmaker" target="_blank" class="btn btn-primary px-4 py-2">
+                    <i class="ri-github-fill mr-2"></i>GitHub
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 英雄区 -->
+    <section class="py-20 md:py-28 bg-gradient-to-b from-background to-secondary/20">
+        <div class="container flex flex-col items-center text-center">
+            <h1 class="text-4xl md:text-6xl font-bold tracking-tight mb-6">一个简单免费的GIF制作工具</h1>
+            <p class="text-xl md:text-2xl text-muted-foreground max-w-3xl mb-10">轻松将多张图片或视频片段合成为高质量的动态GIF，完全本地化操作，无需联网
+            </p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="#download" class="btn btn-primary px-6 py-3 text-lg">
+                    <i class="ri-download-line mr-2"></i>立即下载
+                </a>
+                <a href="#features" class="btn btn-secondary px-6 py-3 text-lg">
+                    <i class="ri-information-line mr-2"></i>了解更多
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 特点 -->
+    <section id="features" class="py-16 bg-background">
+        <div class="container">
+            <h2 class="text-3xl font-bold text-center mb-12">特点</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- 特点1 -->
+                <div class="card p-6">
+                    <div class="mb-4 text-primary text-2xl">
+                        <i class="ri-speed-line"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">轻量又强大</h3>
+                    <p class="text-muted-foreground">专注于解决"快速生成高质量GIF"这一需求，提供多种参数设置，满足不同场景的需求。</p>
+                </div>
+                <!-- 特点2 -->
+                <div class="card p-6">
+                    <div class="mb-4 text-primary text-2xl">
+                        <i class="ri-hard-drive-2-line"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">完全本地化操作</h3>
+                    <p class="text-muted-foreground">不需要上传图片，也不依赖网络。所有处理都在你的电脑上完成，速度快，隐私有保障。</p>
+                </div>
+                <!-- 特点3 -->
+                <div class="card p-6">
+                    <div class="mb-4 text-primary text-2xl">
+                        <i class="ri-timer-line"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">支持设置切换时间</h3>
+                    <p class="text-muted-foreground">通过参数设置每张图片的显示时间，控制动图的速度，让画面切换更快或更慢。</p>
+                </div>
+                <!-- 特点4 -->
+                <div class="card p-6">
+                    <div class="mb-4 text-primary text-2xl">
+                        <i class="ri-aspect-ratio-line"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">支持调整图片大小</h3>
+                    <p class="text-muted-foreground">将不同大小的图片调整为统一大小，可指定目标宽高，还可选择是否保持原始宽高比。</p>
+                </div>
+                <!-- 特点5 -->
+                <div class="card p-6">
+                    <div class="mb-4 text-primary text-2xl">
+                        <i class="ri-movie-line"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">支持从视频创建GIF</h3>
+                    <p class="text-muted-foreground">从视频文件直接创建GIF动图，指定视频的开始和结束时间，设置每秒提取的帧数。</p>
+                </div>
+                <!-- 特点6 -->
+                <div class="card p-6">
+                    <div class="mb-4 text-primary text-2xl">
+                        <i class="ri-global-line"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">开源免费</h3>
+                    <p class="text-muted-foreground">代码托管在GitHub上，采用开源协议，任何人都可以下载、使用甚至修改它。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 使用方法 -->
+    <section id="usage" class="py-16 bg-secondary/20">
+        <div class="container">
+            <h2 class="text-3xl font-bold text-center mb-12">使用方法</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <div class="space-y-6">
+                        <div class="card p-6">
+                            <h3 class="text-xl font-semibold mb-4">1. 准备图片素材</h3>
+                            <p class="text-muted-foreground">
+                                准备好你需要制作GIF的图片素材。这些图片可以是你拍摄的一组连拍照片，也可以是从其他地方提取的画面帧。注意，图片的命名顺序会影响最终的动态效果，最好按时间顺序排列好。</p>
+                        </div>
+                        <div class="card p-6">
+                            <h3 class="text-xl font-semibold mb-4">2. 放入指定目录</h3>
+                            <p class="text-muted-foreground">将图片素材放到一个文件夹中，例如<code
+                                    class="bg-muted px-1 py-0.5 rounded">images</code>。</p>
+                        </div>
+                        <div class="card p-6">
+                            <h3 class="text-xl font-semibold mb-4">3. 使用命令行</h3>
+                            <p class="text-muted-foreground mb-4">GifMaker支持两种模式：从图片创建GIF和从视频创建GIF。</p>
+                            <div class="bg-muted p-4 rounded-md overflow-x-auto">
+                                <pre><code>./gif-maker images -i images -o result.gif -d 1000 -p "*.png"</code></pre>
+                            </div>
+                            <p class="text-sm text-muted-foreground mt-2">从<code
+                                    class="bg-muted px-1 py-0.5 rounded">./images</code>文件夹读取所有PNG图片，设置每张图片显示1秒（1000毫秒），生成GIF并保存为<code
+                                    class="bg-muted px-1 py-0.5 rounded">result.gif</code>。</p>
+                        </div>
+                        <div class="card p-6">
+                            <h3 class="text-xl font-semibold mb-4">4. 查看结果</h3>
+                            <p class="text-muted-foreground">工具运行完成后，你会在指定的输出路径找到生成的GIF文件。如果对效果不满意，可以调整参数重新生成。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-6">
+                    <div class="card p-6">
+                        <h3 class="text-xl font-semibold mb-4">调整图片大小</h3>
+                        <div class="bg-muted p-4 rounded-md overflow-x-auto">
+                            <pre><code>./gif-maker images -i images -o resized.gif -d 200 -r -w 800 --height 600</code></pre>
+                        </div>
+                        <p class="text-sm text-muted-foreground mt-2">先将所有图片调整为800×600的大小，然后生成GIF，每张图片显示0.2秒。</p>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="text-xl font-semibold mb-4">使用填充模式</h3>
+                        <div class="bg-muted p-4 rounded-md overflow-x-auto">
+                            <pre><code>./gif-maker images -i images -o filled.gif -d 300 -r -w 250 --height 500 -k</code></pre>
+                        </div>
+                        <p class="text-sm text-muted-foreground mt-2">将图片调整为250×500的大小，并默认使用"填充"模式确保图片完全填满指定尺寸。</p>
+                        <div class="mt-4 flex justify-center">
+                            <img src="doc/images/filled.gif" alt="填充模式示例" class="max-w-full h-auto rounded-md">
+                        </div>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="text-xl font-semibold mb-4">从视频创建GIF</h3>
+                        <div class="bg-muted p-4 rounded-md overflow-x-auto">
+                            <pre><code>./gif-maker video -i video.mp4 -o video_clip.gif -s 5 -e 10 -f 10 -r -w 400</code></pre>
+                        </div>
+                        <p class="text-sm text-muted-foreground mt-2">从视频文件的第5秒到第10秒提取帧，每秒10帧，调整为宽度400像素，并保持原始宽高比。</p>
+                        <div class="mt-4 flex justify-center">
+                            <img src="doc/images/video_clip.gif" alt="视频转GIF示例" class="max-w-full h-auto rounded-md">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 下载 -->
+    <section id="download" class="py-16 bg-background">
+        <div class="container">
+            <h2 class="text-3xl font-bold text-center mb-12">下载</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold mb-4">GitHub</h3>
+                    <ul class="space-y-2">
+                        <li class="flex items-center">
+                            <i class="ri-github-fill mr-2 text-primary"></i>
+                            <span>项目地址：</span>
+                            <a href="https://github.com/xmx0632/gifmaker" target="_blank"
+                                class="ml-1 text-primary hover:underline">github.com/xmx0632/gifmaker</a>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="ri-download-line mr-2 text-primary"></i>
+                            <span>下载地址：</span>
+                            <a href="https://github.com/xmx0632/gifmaker/releases" target="_blank"
+                                class="ml-1 text-primary hover:underline">github.com/xmx0632/gifmaker/releases</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold mb-4">Gitee（国内用户推荐）</h3>
+                    <ul class="space-y-2">
+                        <li class="flex items-center">
+                            <i class="ri-git-repository-line mr-2 text-primary"></i>
+                            <span>项目地址：</span>
+                            <a href="https://gitee.com/xmx0632/gifmaker" target="_blank"
+                                class="ml-1 text-primary hover:underline">gitee.com/xmx0632/gifmaker</a>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="ri-download-line mr-2 text-primary"></i>
+                            <span>下载地址：</span>
+                            <a href="https://gitee.com/xmx0632/gifmaker/releases" target="_blank"
+                                class="ml-1 text-primary hover:underline">gitee.com/xmx0632/gifmaker/releases</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-8 card p-6">
+                <h3 class="text-xl font-semibold mb-4">支持平台</h3>
+                <div class="flex flex-wrap gap-4">
+                    <div class="flex items-center bg-secondary px-4 py-2 rounded-full">
+                        <i class="ri-windows-fill mr-2 text-primary"></i>
+                        <span>Windows</span>
+                    </div>
+                    <div class="flex items-center bg-secondary px-4 py-2 rounded-full">
+                        <i class="ri-apple-fill mr-2 text-primary"></i>
+                        <span>macOS Intel</span>
+                    </div>
+                    <div class="flex items-center bg-secondary px-4 py-2 rounded-full">
+                        <i class="ri-apple-fill mr-2 text-primary"></i>
+                        <span>macOS ARM</span>
+                    </div>
+                    <div class="flex items-center bg-secondary px-4 py-2 rounded-full">
+                        <i class="ri-ubuntu-fill mr-2 text-primary"></i>
+                        <span>Linux</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 支持 -->
+    <section id="support" class="py-16 bg-secondary/20">
+        <div class="container">
+            <h2 class="text-3xl font-bold text-center mb-12">支持与贡献</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold mb-4">如何贡献</h3>
+                    <p class="text-muted-foreground mb-4">GifMaker是一个开源项目，欢迎任何形式的贡献：</p>
+                    <ul class="space-y-2">
+                        <li class="flex items-start">
+                            <i class="ri-bug-line mr-2 mt-1 text-primary"></i>
+                            <span>报告问题或提出功能建议</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="ri-git-pull-request-line mr-2 mt-1 text-primary"></i>
+                            <span>提交代码改进或新功能</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="ri-file-text-line mr-2 mt-1 text-primary"></i>
+                            <span>完善文档或翻译</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="ri-share-line mr-2 mt-1 text-primary"></i>
+                            <span>分享给更多需要的人</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold mb-4">联系方式</h3>
+                    <p class="text-muted-foreground mb-4">如果你有任何问题或建议，可以通过以下方式联系：</p>
+                    <ul class="space-y-2">
+                        <li class="flex items-center">
+                            <i class="ri-github-fill mr-2 text-primary"></i>
+                            <span>在GitHub上提交Issue</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="ri-git-repository-line mr-2 text-primary"></i>
+                            <span>在Gitee上提交Issue</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="py-8 border-t">
+        <div class="container">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center gap-2 mb-4 md:mb-0">
+                    <img src="doc/cover.png" alt="GifMaker Logo" class="h-6 w-6">
+                    <span class="font-semibold">GifMaker</span>
+                </div>
+                <div class="text-sm text-muted-foreground">
+                    © 2025 GifMaker. 开源项目，采用MIT许可证。
+                </div>
+                <div class="flex items-center gap-4 mt-4 md:mt-0">
+                    <a href="https://github.com/xmx0632/gifmaker" target="_blank"
+                        class="text-muted-foreground hover:text-primary">
+                        <i class="ri-github-fill text-xl"></i>
+                    </a>
+                    <a href="https://gitee.com/xmx0632/gifmaker" target="_blank"
+                        class="text-muted-foreground hover:text-primary">
+                        <i class="ri-git-repository-line text-xl"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>
